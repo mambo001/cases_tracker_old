@@ -1,0 +1,62 @@
+{
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAieWTXiunV6NfFBnO8yapLmxhSm51EEi0rDWrelbfOJPlKDunpE0cacXWOIfU2zSMc9r5qFaWXQ03tleuAovd+4JvzEMeidniGcDkRDd2dt/geekISjJqJd7SOG5Ktol956WbfMF1RJMtFICCHT20RbgkV6yBeGvZzo4+iptSNFp3xDEUKpCd0ek9hoWgXr5kp8xfOcP4z+tZSHhSAaB9rf1Q4fkIBobZ0D0cFWIzU0sSb18aA8TCYW1AYWtgD+XXOcE8yIT8wJFgtgQhcnU4VbZnLs/9e+Ko3mYfZADqrb3C3Ddt7tVpW0WSiLXbtq5c9igA7wp0KpvgsC3wZB9NfwIDAQAB",
+    "manifest_version": 2,
+    "name": "Cases Tracker",
+    "description": "Chrome Extension to track cases.",
+    "version": "1.3.2",
+    "icons": {"128": "images/icon_128.png"},
+    "browser_action": {
+        "default_icon": "images/icon.png",
+        "default_popup": "popup.html"
+    },
+
+    "options_page": "options.html",    
+    
+    "permissions": [
+      "contextMenus",
+      "activeTab",
+      "storage",
+      "https://script.google.com",
+      "https://*.google.com/"
+    ],
+    
+    "content_scripts": [
+        {
+          "matches": [
+            "https://redbull.corp.google.com/*"
+          ],
+          "js": [
+            "./js/vendor/jquery-3.3.1.min.js",
+            "./js/vendor/materialize.min.js",
+            "./js/vendor/sweetalert.min.js",
+            "./js/content_script.js"
+          ],
+          "css": [
+            "./css/vendor/materialize.min.css",
+            "./css/vendor/material_icons.css",
+            "./css/vendor/sweetalert.min.css",
+            "./css/main.css"
+          ]
+        }
+      ],
+      
+    "background": {
+      "scripts": [
+        "./js/background.js", 
+        "./js/vendor/moment.js", 
+        "./js/vendor/jquery-3.3.1.min.js", 
+        "./js/popup.js"
+      ],
+      "persistent": false
+    },
+    
+   "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "MacCtrl+Shift+F"
+      },
+      "description": "Opens popup.html"
+      }
+    }
+}
