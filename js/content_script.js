@@ -772,7 +772,7 @@ window.addEventListener('load', function() {
                                         </div>
 
                                         <div id="" class="col s12">
-                                            <label class="active" for="targeting-categories">Please select categories</label>
+                                            <label class="active" for="targeting-categories">Survey Type</label>
                                             <select class="browser-default" id="targeting-categories">
                                                 <option value="" disabled selected="selected">Network Type</option>
                                                 <option value="BLS1">API BS</option>
@@ -1134,8 +1134,8 @@ window.addEventListener('load', function() {
                     e.addEventListener('click', (td) => {
                         // 1234
                         swal({
-                            title: "Are you sure?",
-                            text: "",
+                            title: "Assign this case to you?",
+                            text: "This case will be removed from this table",
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonClass: "blue darken-1",
@@ -1236,6 +1236,7 @@ window.addEventListener('load', function() {
       // countrySelect.parentElement.classList.toggle('hide', false);
     //   langSelect.parentElement.classList.remove('hide');
       languageInput.parentElement.classList.remove('hide');
+      toggleDecisionBtn();
       
   }
 
@@ -1249,15 +1250,16 @@ window.addEventListener('load', function() {
 
     function surveyReviewQueue(){
         clearClass();
-
+        toggleDecisionBtn();
         const customerTypeSelect = document.querySelector('#customer-type'),
             surveyStatusSelect = document.querySelector('#surveystatus-select'),
+            surveyTypeSelect  = document.querySelector('#targeting-categories'),
             rmto = document.querySelector('#rmto');
             queueSelect = document.querySelector('#queue-select');
 
         queueSelect.parentElement.classList.add('s8');
         surveyStatusSelect.parentElement.classList.remove('hide');
-        // surveyTypeSelect.parentElement.classList.remove('hide');    
+        surveyTypeSelect.parentElement.classList.remove('hide');    
         rmto.parentElement.classList.remove('hide');
         customerTypeSelect.parentElement.classList.add('hide');
     }
@@ -1292,19 +1294,21 @@ window.addEventListener('load', function() {
 
     function publisherQueue(){
         clearClass();
+        // toggleDecisionBtn();
         // Toggle elements
         const customerTypeSelect = document.querySelector('#customer-type'),
             surveyStatusSelect = document.querySelector('#surveystatus-select'),
-            // surveyTypeSelect = document.querySelector('#surveytype-select'),
-            // countrySelect = document.querySelector('#country-select'),
+            surveyTypeSelect = document.querySelector('#targeting-categories'),
             countryInput = document.querySelector('#countryInput'),
-            // langSelect = document.querySelector('#lang-select');
-            languageInput = document.querySelector('#languageInput');
-
+            languageInput = document.querySelector('#languageInput'),
+            queueSelect = document.querySelector('#queue-select');
+            // fix rmto overflowing 
+            queueSelect.parentElement.classList.toggle("s8");
+            // queueSelect.parentElement.classList.toggle("s12");
 
             customerTypeSelect.parentElement.classList.add('hide');
             surveyStatusSelect.parentElement.classList.add('hide');
-            // surveyTypeSelect.parentElement.classList.add('hide');
+            surveyTypeSelect.parentElement.classList.add('hide');
             countryInput.parentElement.classList.add('hide');
             languageInput.parentElement.classList.add('hide');
 
@@ -1312,6 +1316,7 @@ window.addEventListener('load', function() {
 
     function partnershipQueue(){
         clearClass();
+        toggleDecisionBtn();
         // Toggle elements
         const customerTypeSelect = document.querySelector('#customer-type'),
             surveyStatusSelect = document.querySelector('#surveystatus-select'),
