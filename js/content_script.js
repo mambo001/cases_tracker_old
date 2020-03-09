@@ -908,6 +908,9 @@ window.addEventListener('load', function() {
         console.log('material chips initialized');
     }
 
+    // 12345
+
+
     // const addCountries = data.countrySelectOptions.forEach((country) => {
     //     let newCountry = document.createElement("option");
     //     newCountry.value = country.name;
@@ -1298,7 +1301,18 @@ window.addEventListener('load', function() {
             // return data.records;    
         })
         .catch(function(error) {
-            swal("Failed!", "There seems to be a problem in retrieving NI cases.", "error");
+            if (error == "SyntaxError: Unexpected end of JSON input"){
+                let tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>No consulted case</td>
+                        <td>No consulted case</td>
+                        <td>No consulted case</td>
+                        <td>No consulted case</td>
+                    `;
+                NICasesTbody.appendChild(tr);
+            } else {
+                swal("Failed!", "There seems to be a problem in retrieving NI cases.", "error");
+            }
             document.querySelector('#ni-table-loader').classList.toggle('hide');
             console.log(error);
         }); 
