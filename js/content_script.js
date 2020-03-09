@@ -1231,6 +1231,8 @@ window.addEventListener('load', function() {
                                 card.classList.add('card', 'white');
                                 card.style.position = "fixed";
                                 card.style.display = "none";
+
+                    
                                 
                             // parent.appendChild(card);
                     NICases.forEach((e) => {
@@ -1240,6 +1242,10 @@ window.addEventListener('load', function() {
                             // console.log(JSON.parse(td.target.parentElement.dataset.record));
                             console.log(td.target.parentElement.parentElement.id);
                             console.log(td.currentTarget.dataset.record);
+
+                            let closeCard = function close(e){
+                                console.log(e + e.currentTarget);
+                            }
 
                             if (td.target.parentElement.parentElement.id === "NICasesTbody"){
                                 parent.appendChild(card);
@@ -1255,6 +1261,13 @@ window.addEventListener('load', function() {
                                 
                                 
                                 card.innerHTML = `
+                                    <div style="display: flex; justify-content: flex-end;">
+                                        <a id="testLink" onclick="function hi(e){
+                                            document.querySelector('#testLink').parentElement.parentElement.remove();
+                                        };hi()" style="cursor: pointer;">
+                                            <i class="material-icons">close</i>
+                                        </a>
+                                    </div>
                                     <div class="card-item">
                                         <label style="margin-right: 5px;">LDAP:</label>
                                         <p class=""> ${tdData.LDAP}</p>
@@ -1272,6 +1285,8 @@ window.addEventListener('load', function() {
                                         <p class="" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"> ${tdData["Screenshot/Comments"]}</p>
                                     </div>
                                 `;
+
+                                
                             
                         });
                     })
@@ -1288,6 +1303,8 @@ window.addEventListener('load', function() {
             console.log(error);
         }); 
     }
+
+
 
   function getFormmatedAHT(date){
     let d = date != "" && date != null ? new Date(date) : "",
