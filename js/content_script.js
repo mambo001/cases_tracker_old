@@ -94,7 +94,10 @@ window.addEventListener('load', function() {
             searchInput= document.querySelector("#searchInput"),
             searchWrapper= document.querySelector("#searchWrapper"),
             searchResultsList= document.querySelector("#searchResultsList"),
-            changePosition = document.querySelector("#changePosition");
+            changePosition = document.querySelector("#changePosition"),
+            tableTitle = document.querySelector("#tableTitle"),
+            btnTableConsult = document.querySelector("#btnTableConsult"),
+            btnTableSubmitted = document.querySelector("#btnTableSubmitted");
 
             
     
@@ -132,13 +135,44 @@ window.addEventListener('load', function() {
 
         // Change position
         checkPosition();
-        
 
+        // 
+        // Table View
+        // 
+        // 12345
+        btnTableConsult.addEventListener('click', () => {
+            tableTitle.textContent = 'Consulted Cases';
+            tableTitle.setAttribute("data-id", "consulted");
+            btnTableSubmitted.classList.toggle('darken-4');
+            btnTableConsult.classList.toggle('darken-4');
+
+            let tableSelected = tableTitle.dataset.id;
+            document.querySelector('#ni-table-loader').classList.toggle('hide');
+            getNIBucket("consulted");
+        });
+
+        btnTableSubmitted.addEventListener('click', () => {
+            tableTitle.textContent = 'Submitted Cases';
+            tableTitle.setAttribute("data-id", "submitted");
+            btnTableSubmitted.classList.toggle('darken-4');
+            btnTableConsult.classList.toggle('darken-4');
+
+            let tableSelected = tableTitle.dataset.id;
+            document.querySelector('#ni-table-loader').classList.toggle('hide');
+            getNIBucket("submitted");
+        });
+        
+        consultTable.addEventListener('click', () => {
+            let tableSelected = tableTitle.dataset.id;
+
+            $('#nimodal').modal('open');
+            document.querySelector('#ni-table-loader').classList.toggle('hide');
+            loadNITable();
+            
+            getNIBucket(tableSelected);
+        });
 
         searchInput.addEventListener("input", getResults);
-        // abcdefg
-        // document.querySelector('#violations-chip > input').addEventListener("input", getResults);
-
         
         // Case ID auto-populate
         caseID.addEventListener('click', (e) => {
@@ -206,14 +240,6 @@ window.addEventListener('load', function() {
         // BLS Checker
         blsChecker.addEventListener('click', () => {
             $('#modal1').modal('open');
-        });
-
-        // BLS Checker
-        consultTable.addEventListener('click', () => {
-            $('#nimodal').modal('open');
-            document.querySelector('#ni-table-loader').classList.toggle('hide');
-            loadNITable();
-            getNIBucket();
         });
 
         // inputID
@@ -896,9 +922,6 @@ window.addEventListener('load', function() {
     //     document.querySelector('#lang-select').append(newLanguage);
     // });
 
-    
-
- 
 
     function addModal(){
         let modal = document.createElement('div');
@@ -1019,11 +1042,15 @@ window.addEventListener('load', function() {
         let modal = document.createElement('div');
         modal.classList.add('m-modal');
         modal.setAttribute("ID", "nimodal");
+        modal.style.transform = 'none';
         modal.innerHTML = `
         <div class="m-modal-content">
-            <div class="container front-page">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-                <h1>Consulted Cases</h1>
+            <div class="container front-page valign-wrapper" style="align-items: baseline; justify-content: space-between; margin: 0rem 0.5rem;">
+                <h2 id="tableTitle" data-id="consulted">Consulted Cases</h2>
+                <div class="" style="display: flex;">
+                    <button id="btnTableConsult" class="btn waves-effect waves-light teal darken-4" style="border-radius: 0px;">Consulted</button>
+                    <button id="btnTableSubmitted" class="btn waves-effect waves-light teal" style="border-radius: 0px;">Submitted</button>
+                </div>
                 <button class="waves-effect waves-teal btn-flat" id="getConsultedCases"><i class="material-icons">refresh</i></button>
             </div>
                 <div class="row">
@@ -1053,10 +1080,11 @@ window.addEventListener('load', function() {
     }
 
     document.querySelector('#getConsultedCases').addEventListener('click', (e) => {
-        // let what =  getNIBucket();
-        // console.log("what: " + what);
-        document.querySelector('#ni-table-loader').classList.toggle('hide');
-        getNIBucket();
+        let NILoader = document.querySelector('#ni-table-loader'),
+            tableTitle = document.querySelector('#tableTitle');
+
+        NILoader.classList.toggle('hide');
+        getNIBucket(tableTitle.dataset.id);
     });
 
     // NICasesTable
@@ -1085,9 +1113,10 @@ window.addEventListener('load', function() {
 
     // loadNITable();
 
-    function getNIBucket (){
-        const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=Consulted%20Bucket`;
-        // const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
+    function getNIBucket (tableSelected){
+        const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=Consulted%20Bucket`;
+        const urlSubmitted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
+        let url = tableSelected === "submitted" ? urlSubmitted : urlConsulted;
         console.log('fetching');
         fetch(url)
         .then((resp) => resp.json())
@@ -1105,6 +1134,9 @@ window.addEventListener('load', function() {
                     array.push(e["Reference ID"]);
                     array.push(e["EWOQ/CASE ID"]);
                     array.push(e["Queue Type"]);
+
+                    // case data object
+                    array.push(e);
                     return array;
                 });
                 let NICasesTable = document.querySelector('#NICasesTable'),
@@ -1118,6 +1150,12 @@ window.addEventListener('load', function() {
                     tr.style.cursor = "pointer";
                     tr.setAttribute("data-id", c[1]);
 
+                    // setting data- "record" in HTML
+                    tr.setAttribute("data-record", JSON.stringify(c[4]));
+
+                    // remove last element which is the data object
+                    c.pop();
+                    // creates a TD foreach element in array
                     c.forEach(cd => {
                         let td = document.createElement('td');
                         td.innerText = cd;
@@ -1129,62 +1167,116 @@ window.addEventListener('load', function() {
                 });
                 // console.log(tbody);
 
-                let NICases = document.querySelectorAll('#NICasesTbody > tr');
-                NICases.forEach(e => {
-                    e.addEventListener('click', (td) => {
-                        // 1234
-                        swal({
-                            title: "Assign this case to you?",
-                            text: "This case will be removed from this table",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonClass: "blue darken-1",
-                            confirmButtonText: "Yes, proceed!",
-                            closeOnConfirm: true
-                        },
-                        function(){
-                            // preFinish();
-                            // doFetch();
-                            // doFinish();
-                            let caseRef = td.target.parentElement.dataset.id;
-                            let matchedCase = data.records;
-                            let arrayObject = Object.entries(matchedCase);
+                let NICases = document.querySelectorAll('#NICasesTbody > tr'),
+                    tableTitle = document.querySelector('#tableTitle');
 
-                            let caseFound = arrayObject.filter(e => e[1]["Reference ID"] == caseRef);
-                            let caseFinal = caseFound.shift();
-                            let caseFoundObject = caseFinal[1];
-
-
-                            // if (local)
-                            // let assigned = JSON.parse(localStorage.getItem('assigned'));
-                            let assigned = {};
+                if(tableTitle.dataset.id == 'consulted'){
+                    NICases.forEach(e => {
+                        e.addEventListener('click', (td) => {
+                            swal({
+                                title: "Are you sure?",
+                                text: "This case will be assigned to you",
+                                type: "warning",
+                                showCancelButton: true,
+                                confirmButtonClass: "blue darken-1",
+                                confirmButtonText: "Yes, proceed!",
+                                closeOnConfirm: true
+                            },
+                            function(){
+                                // preFinish();
+                                // doFetch();
+                                // doFinish();
+                                let caseRef = td.target.parentElement.dataset.id;
+                                let matchedCase = data.records;
+                                let arrayObject = Object.entries(matchedCase);
     
-                            // assigned["decision"] = decision;
-                            assigned["survey_ids"] = caseFoundObject["EWOQ/CASE ID"];
-                            assigned["start_time"] = caseFoundObject["Start Time MNL"];
-                            localStorage.setItem("assigned", JSON.stringify(assigned));
-                            pushsurvey();
-                            
-
-                            console.log("case: " + JSON.stringify(caseFoundObject));
-                            
-                            const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=delete&tab=Consulted%20Bucket&id=${caseRef}`;
-                            fetch(url)
-                            .then((resp) => resp.json())
-                            .then(function(data){
-                                console.log(data.message);
-                                if (data.message == 'deleted successfully'){
-                                    getNIBucket();
-                                    console.log("table reloaded");
-                                }
+                                let caseFound = arrayObject.filter(e => e[1]["Reference ID"] == caseRef);
+                                let caseFinal = caseFound.shift();
+                                let caseFoundObject = caseFinal[1];
+    
+    
+                                // if (local)
+                                // let assigned = JSON.parse(localStorage.getItem('assigned'));
+                                let assigned = {};
+        
+                                // assigned["decision"] = decision;
+                                assigned["survey_ids"] = caseFoundObject["EWOQ/CASE ID"];
+                                assigned["start_time"] = caseFoundObject["Start Time MNL"];
+                                localStorage.setItem("assigned", JSON.stringify(assigned));
+                                pushsurvey();
+                                
+    
+                                console.log("case: " + JSON.stringify(caseFoundObject));
+                                
+                                const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=delete&tab=Consulted%20Bucket&id=${caseRef}`;
+                                fetch(url)
+                                .then((resp) => resp.json())
+                                .then(function(data){
+                                    console.log(data.message);
+                                    if (data.message == 'deleted successfully'){
+                                        getNIBucket();
+                                        console.log("table reloaded");
+                                    }
+                                });
+    
+                                // close modal
+                                $('#nimodal').modal('close');
+    
                             });
-
-                            // close modal
-                            $('#nimodal').modal('close');
-
                         });
                     });
-                });
+                } else if (tableTitle.dataset.id == 'submitted'){
+                    let card = document.createElement('div'),
+                                parent = document.querySelector('#nimodal');
+                                card.classList.add('card', 'white');
+                                card.style.position = "fixed";
+                                card.style.display = "none";
+                                
+                            // parent.appendChild(card);
+                    NICases.forEach((e) => {
+                        e.addEventListener('mousemove', (td) => {
+                            let tdData = JSON.parse(td.target.parentElement.dataset.record),
+                                aht = getFormmatedAHT(tdData.AHT);
+                            // console.log(JSON.parse(td.target.parentElement.dataset.record));
+                            console.log(td.target.parentElement.parentElement.id);
+                            console.log(td.currentTarget.dataset.record);
+
+                            if (td.target.parentElement.parentElement.id === "NICasesTbody"){
+                                parent.appendChild(card);
+                                card.style.display = "block";
+                            } else {
+                                card.style.display = "none";
+                            }
+                            
+                            // appendCard to body
+                                card.classList.add('case-card');
+                                card.style.left = `${td.screenX +15}px`;
+                                card.style.top = `${td.screenY + -180}px`;
+                                
+                                
+                                card.innerHTML = `
+                                    <div class="card-item">
+                                        <label style="margin-right: 5px;">LDAP:</label>
+                                        <p class=""> ${tdData.LDAP}</p>
+                                    </div>
+                                    <div class="card-item">
+                                        <label style="margin-right: 5px;">Categories: </label>
+                                        <p class=""> ${tdData.Categories}</p>
+                                    </div>
+                                    <div class="card-item">
+                                        <label style="margin-right: 5px;">AHT:</label>
+                                        <p class=""> ${aht}</p>
+                                    </div>
+                                    <div class="card-item">
+                                        <label style="margin-right: 5px;">Screenshot/Comments:</label>
+                                        <p class="" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"> ${tdData["Screenshot/Comments"]}</p>
+                                    </div>
+                                `;
+                            
+                        });
+                    })
+                }
+                
                 console.log(NICases);
 
             }
@@ -1196,6 +1288,14 @@ window.addEventListener('load', function() {
             console.log(error);
         }); 
     }
+
+  function getFormmatedAHT(date){
+    let d = date != "" && date != null ? new Date(date) : "",
+        aht = `${d.getHours()}:${d.getMinutes()}:${d.getSeconds()}`;
+
+    return aht;
+  }
+
 
   function getSelectedQueue(){
     let selected = queueSelect.options[queueSelect.selectedIndex].value,
