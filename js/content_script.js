@@ -1314,6 +1314,7 @@ window.addEventListener('load', function() {
                             <td>No consulted case</td>
                         `;
                     if(tableTitle.dataset.id == 'consulted'){
+                        NICasesTbody.innerHTML = "";
                         NICasesTbody.appendChild(tr);
                     }
                     
