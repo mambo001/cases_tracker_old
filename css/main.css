@@ -245,6 +245,19 @@ div.sweet-alert.showSweetAlert.visible > h2{
     min-height: 30vh;
 }
 
+#nimodal{
+    width: 95vw;
+    max-width: 1600px;
+    min-height: 30vh;
+}
+
+#NICasesTable td{
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .logo{
     margin: 0px 32px 0px 0px;
     font-size: 4rem;
