@@ -1067,7 +1067,17 @@ window.addEventListener('load', function() {
                                     <th><b>LDAP</b></th>
                                     <th><b>Reference ID</b></th>
                                     <th><b>EWOQ/CASE ID</b></th>
-                                    <th><b>Queue Type</b></th>                           			
+                                    <th><b>Queue Type</b></th>
+                                    <th><b>Language</b></th>
+                                    <th><b>Country</b></th>
+                                    <th><b>RMTO</b></th>
+                                    <th><b>Survey Type</b></th>
+                                    <th><b>Screenshot/Comments</b></th>
+                                    <th><b>Survey Decision</b></th>
+                                    <th><b>Start Time MNL</b></th>
+                                    <th><b>End Time MNL</b></th>
+                                    <th><b>Categories</b></th>
+                                    <th><b>AHT</b></th>
                                 </tr>
                             </thead>
                             <tbody id="NICasesTbody">
@@ -1116,219 +1126,291 @@ window.addEventListener('load', function() {
 
     // loadNITable();
 
-    function getNIBucket (tableSelected){
-        const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=Consulted%20Bucket`;
-        const urlSubmitted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
-        let url = tableSelected === "submitted" ? urlSubmitted : urlConsulted;
-        console.log('fetching');
-        fetch(url)
-        .then((resp) => resp.json())
-        .then(function(data){
-            // swal("Success!", "Case has been successfully tracked", "success");
-            // console.table(data.response);
-            // console.table(data.records);
-            // SAME SHIT LOADER
-            document.querySelector('#ni-table-loader').classList.toggle('hide');
+    // async function getUserAsync(name) {
+    //     await fetch(`https://api.github.com/users/${name}`).then(async (response)=> {
+    //     return await response.json()
+    // }
 
-            if (data.records) {
-                let tbody = data.records.map((e) => {
-                    let array = [];
-                    array.push(e["LDAP"]);
-                    array.push(e["Reference ID"]);
-                    array.push(e["EWOQ/CASE ID"]);
-                    array.push(e["Queue Type"]);
+    async function getUserAsync() {
+        const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
+        let response = await fetch(urlConsulted);
+        let data = await response.json()
+        return data;
+    }
 
-                    // case data object
-                    array.push(e);
-                    return array;
-                });
-                let NICasesTable = document.querySelector('#NICasesTable'),
-                    NICasesTbody = document.querySelector('#NICasesTbody');
-
-                NICasesTbody.innerHTML = "";
-                tbody.reverse();
-                
-                tbody.forEach((c) => {
-                    let tr = document.createElement('tr');
-                    tr.style.cursor = "pointer";
-                    tr.setAttribute("data-id", c[1]);
-
-                    // setting data- "record" in HTML
-                    tr.setAttribute("data-record", JSON.stringify(c[4]));
-
-                    // remove last element which is the data object
-                    c.pop();
-                    // creates a TD foreach element in array
-                    c.forEach(cd => {
-                        let td = document.createElement('td');
-                        td.innerText = cd;
-                        
-                        tr.appendChild(td);
-                    });
-                    
-                    NICasesTbody.appendChild(tr);
-                });
-                // console.log(tbody);
-
-                let NICases = document.querySelectorAll('#NICasesTbody > tr'),
-                    tableTitle = document.querySelector('#tableTitle');
-
-                if(tableTitle.dataset.id == 'consulted'){
-                    NICases.forEach(e => {
-                        e.addEventListener('click', (td) => {
-                            swal({
-                                title: "Are you sure?",
-                                text: "This case will be assigned to you",
-                                type: "warning",
-                                showCancelButton: true,
-                                confirmButtonClass: "blue darken-1",
-                                confirmButtonText: "Yes, proceed!",
-                                closeOnConfirm: true
-                            },
-                            function(){
-                                // preFinish();
-                                // doFetch();
-                                // doFinish();
-                                let caseRef = td.target.parentElement.dataset.id;
-                                let matchedCase = data.records;
-                                let arrayObject = Object.entries(matchedCase);
-    
-                                let caseFound = arrayObject.filter(e => e[1]["Reference ID"] == caseRef);
-                                let caseFinal = caseFound.shift();
-                                let caseFoundObject = caseFinal[1];
-    
-    
-                                // if (local)
-                                // let assigned = JSON.parse(localStorage.getItem('assigned'));
-                                let assigned = {};
-        
-                                // assigned["decision"] = decision;
-                                assigned["survey_ids"] = caseFoundObject["EWOQ/CASE ID"];
-                                assigned["start_time"] = caseFoundObject["Start Time MNL"];
-                                localStorage.setItem("assigned", JSON.stringify(assigned));
-                                pushsurvey();
-                                
-    
-                                console.log("case: " + JSON.stringify(caseFoundObject));
-                                
-                                const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=delete&tab=Consulted%20Bucket&id=${caseRef}`;
-                                fetch(url)
-                                .then((resp) => resp.json())
-                                .then(function(data){
-                                    console.log(data.message);
-                                    if (data.message == 'deleted successfully'){
-                                        getNIBucket();
-                                        console.log("table reloaded");
-                                    }
-                                });
-    
-                                // close modal
-                                $('#nimodal').modal('close');
-    
-                            });
-                        });
-                    });
-                } else if (tableTitle.dataset.id == 'submitted'){
-                    let card = document.createElement('div'),
-                                parent = document.querySelector('#nimodal');
-                                card.classList.add('card', 'white');
-                                card.style.position = "fixed";
-                                card.style.display = "none";
-
-                    
-                                
-                            // parent.appendChild(card);
-                    NICases.forEach((e) => {
-                        e.addEventListener('mousemove', (td) => {
-                            let tdData = JSON.parse(td.target.parentElement.dataset.record),
-                                aht = getFormmatedAHT(tdData.AHT);
-                            // console.log(JSON.parse(td.target.parentElement.dataset.record));
-                            console.log(td.target.parentElement.parentElement.id);
-                            console.log(td.currentTarget.dataset.record);
-
-                            let closeCard = function close(e){
-                                console.log(e + e.currentTarget);
-                            }
-
-                            if (td.target.parentElement.parentElement.id === "NICasesTbody"){
-                                parent.appendChild(card);
-                                card.style.display = "block";
-                            } else {
-                                card.style.display = "none";
-                            }
-                            
-                            // appendCard to body
-                                card.classList.add('case-card');
-                                card.style.left = `${td.screenX +15}px`;
-                                card.style.top = `${td.screenY + -180}px`;
-                                
-                                
-                                card.innerHTML = `
-                                    <div style="display: flex; justify-content: flex-end;">
-                                        <a id="testLink" onclick="function hi(e){
-                                            document.querySelector('#testLink').parentElement.parentElement.remove();
-                                        };hi()" style="cursor: pointer;">
-                                            <i class="material-icons">close</i>
-                                        </a>
-                                    </div>
-                                    <div class="card-item">
-                                        <label style="margin-right: 5px;">LDAP:</label>
-                                        <p class=""> ${tdData.LDAP}</p>
-                                    </div>
-                                    <div class="card-item">
-                                        <label style="margin-right: 5px;">Categories: </label>
-                                        <p class=""> ${tdData.Categories}</p>
-                                    </div>
-                                    <div class="card-item">
-                                        <label style="margin-right: 5px;">AHT:</label>
-                                        <p class=""> ${aht}</p>
-                                    </div>
-                                    <div class="card-item">
-                                        <label style="margin-right: 5px;">Screenshot/Comments:</label>
-                                        <p class="" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"> ${tdData["Screenshot/Comments"]}</p>
-                                    </div>
-                                `;
-
-                                
-                            
-                        });
-                    })
-                }
-                
-                console.log(NICases);
-
-            }
-            // return data.records;    
+    function getConsultedBucket(){
+        // const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=Consulted%20Bucket`;
+        const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
+        fetch(urlConsulted)
+        .then((response) => {
+            return response.json();
         })
-        .catch(function(error) {
-            tableTitle = document.querySelector('#tableTitle');
+        .then((data) => {
+            document.querySelector('#ni-table-loader').classList.toggle('hide');
+            doCreateNITable(data.records);
+        });
+    }
+
+    function doCreateNITable(data){
+        let array = getTableArray(data);
+
+        array.forEach((row) => {
+            let tr = document.createElement('tr');
+                    tr.style.cursor = "pointer";
+                    tr.setAttribute("data-id", row[1]);
+            
+            row.forEach(cd => {
+                let td = document.createElement('td');
+                td.innerText = cd;
+                
+                tr.appendChild(td);
+            });
+            
+            NICasesTbody.appendChild(tr);
+        });
+    }
+
+    function getTableArray(data){
+        let array = [],
+            objValues = Object.values(data);
+
+        objValues.forEach((e) => {
+            array.push([
+                e["LDAP"],
+                e["Reference ID"],
+                e["EWOQ/CASE ID"],
+                e["Queue Type"],
+                e["Language"],
+                e["Country"],
+                e["RMTO"],
+                e["Survey Type"],
+                e["Screenshot/Comments"],
+                e["Survey Decision"],
+                e["Start Time MNL"],
+                e["End Time MNL"],
+                e["Categories"],
+                e["AHT"]
+            ]);
+        });
+        return array;
+    }
+
+    // console.log(getConsultedBucket());
+
+    function getNIBucket (tableSelected){
+        let somethingz = getConsultedBucket(); 
+        console.log("records: " + somethingz);
+        
+        // const urlConsulted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=Consulted%20Bucket`;
+        // const urlSubmitted = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=read&tab=All%20Cases`;
+        // let url = tableSelected === "submitted" ? urlSubmitted : urlConsulted;
+        // console.log('fetching');
+        // fetch(url)
+        // .then((resp) => resp.json())
+        // .then(function(data){
+        //     // swal("Success!", "Case has been successfully tracked", "success");
+        //     // console.table(data.response);
+        //     // console.table(data.records);
+        //     // SAME SHIT LOADER
+        //     document.querySelector('#ni-table-loader').classList.toggle('hide');
+
+        //     if (data.records) {
+        //         let tbody = data.records.map((e) => {
+        //             let array = [];
+        //             array.push(e["LDAP"]);
+        //             array.push(e["Reference ID"]);
+        //             array.push(e["EWOQ/CASE ID"]);
+        //             array.push(e["Queue Type"]);
+
+        //             // case data object
+        //             array.push(e);
+        //             return array;
+        //         });
+        //         let NICasesTable = document.querySelector('#NICasesTable'),
+        //             NICasesTbody = document.querySelector('#NICasesTbody');
+
+        //         NICasesTbody.innerHTML = "";
+        //         tbody.reverse();
+                
+        //         tbody.forEach((c) => {
+        //             let tr = document.createElement('tr');
+        //             tr.style.cursor = "pointer";
+        //             tr.setAttribute("data-id", c[1]);
+
+        //             // setting data- "record" in HTML
+        //             tr.setAttribute("data-record", JSON.stringify(c[4]));
+
+        //             // remove last element which is the data object
+        //             c.pop();
+        //             // creates a TD foreach element in array
+        //             c.forEach(cd => {
+        //                 let td = document.createElement('td');
+        //                 td.innerText = cd;
+                        
+        //                 tr.appendChild(td);
+        //             });
+                    
+        //             NICasesTbody.appendChild(tr);
+        //         });
+        //         // console.log(tbody);
+
+        //         let NICases = document.querySelectorAll('#NICasesTbody > tr'),
+        //             tableTitle = document.querySelector('#tableTitle');
+
+        //         if(tableTitle.dataset.id == 'consulted'){
+        //             NICases.forEach(e => {
+        //                 e.addEventListener('click', (td) => {
+        //                     swal({
+        //                         title: "Are you sure?",
+        //                         text: "This case will be assigned to you",
+        //                         type: "warning",
+        //                         showCancelButton: true,
+        //                         confirmButtonClass: "blue darken-1",
+        //                         confirmButtonText: "Yes, proceed!",
+        //                         closeOnConfirm: true
+        //                     },
+        //                     function(){
+        //                         // preFinish();
+        //                         // doFetch();
+        //                         // doFinish();
+        //                         let caseRef = td.target.parentElement.dataset.id;
+        //                         let matchedCase = data.records;
+        //                         let arrayObject = Object.entries(matchedCase);
+    
+        //                         let caseFound = arrayObject.filter(e => e[1]["Reference ID"] == caseRef);
+        //                         let caseFinal = caseFound.shift();
+        //                         let caseFoundObject = caseFinal[1];
+    
+    
+        //                         // if (local)
+        //                         // let assigned = JSON.parse(localStorage.getItem('assigned'));
+        //                         let assigned = {};
+        
+        //                         // assigned["decision"] = decision;
+        //                         assigned["survey_ids"] = caseFoundObject["EWOQ/CASE ID"];
+        //                         assigned["start_time"] = caseFoundObject["Start Time MNL"];
+        //                         localStorage.setItem("assigned", JSON.stringify(assigned));
+        //                         pushsurvey();
+                                
+    
+        //                         console.log("case: " + JSON.stringify(caseFoundObject));
+                                
+        //                         const url = `https://script.google.com/a/google.com/macros/s/AKfycbzjhgxDHp_UlzjHnsguxTpt-FOTqPkAPGnFVGJeXUw/dev?action=delete&tab=Consulted%20Bucket&id=${caseRef}`;
+        //                         fetch(url)
+        //                         .then((resp) => resp.json())
+        //                         .then(function(data){
+        //                             console.log(data.message);
+        //                             if (data.message == 'deleted successfully'){
+        //                                 getNIBucket();
+        //                                 console.log("table reloaded");
+        //                             }
+        //                         });
+    
+        //                         // close modal
+        //                         $('#nimodal').modal('close');
+    
+        //                     });
+        //                 });
+        //             });
+        //         } else if (tableTitle.dataset.id == 'submitted'){
+        //             // let card = document.createElement('div'),
+        //             //             parent = document.querySelector('#nimodal');
+        //             //             card.classList.add('card', 'white');
+        //             //             card.style.position = "fixed";
+        //             //             card.style.display = "none";
+
+        //             // NICases.forEach((e) => {
+        //             //     e.addEventListener('mousemove', (td) => {
+        //             //         let tdData = JSON.parse(td.target.parentElement.dataset.record),
+        //             //             aht = getFormmatedAHT(tdData.AHT);
+        //             //         // console.log(JSON.parse(td.target.parentElement.dataset.record));
+        //             //         console.log(td.target.parentElement.parentElement.id);
+        //             //         console.log(td.currentTarget.dataset.record);
+
+        //             //         let closeCard = function close(e){
+        //             //             console.log(e + e.currentTarget);
+        //             //         }
+
+        //             //         if (td.target.parentElement.parentElement.id === "NICasesTbody"){
+        //             //             parent.appendChild(card);
+        //             //             card.style.display = "block";
+        //             //         } else {
+        //             //             card.style.display = "none";
+        //             //         }
+                            
+        //             //         // appendCard to body
+        //             //             card.classList.add('case-card');
+        //             //             card.style.left = `${td.screenX +15}px`;
+        //             //             // card.style.left = `150px`;
+        //             //             card.style.top = `${td.screenY + -180}px`;
+                                
+                                
+        //             //             card.innerHTML = `
+        //             //                 <div style="display: flex; justify-content: flex-end;">
+        //             //                     <a id="testLink" onclick="function hi(e){
+        //             //                         document.querySelector('#testLink').parentElement.parentElement.remove();
+        //             //                     };hi()" style="cursor: pointer;">
+        //             //                         <i class="material-icons">close</i>
+        //             //                     </a>
+        //             //                 </div>
+        //             //                 <div class="card-item">
+        //             //                     <label style="margin-right: 5px;">LDAP:</label>
+        //             //                     <p class=""> ${tdData.LDAP}</p>
+        //             //                 </div>
+        //             //                 <div class="card-item">
+        //             //                     <label style="margin-right: 5px;">Categories: </label>
+        //             //                     <p class=""> ${tdData.Categories}</p>
+        //             //                 </div>
+        //             //                 <div class="card-item">
+        //             //                     <label style="margin-right: 5px;">AHT:</label>
+        //             //                     <p class=""> ${aht}</p>
+        //             //                 </div>
+        //             //                 <div class="card-item">
+        //             //                     <label style="margin-right: 5px;">Screenshot/Comments:</label>
+        //             //                     <p class="" style="overflow: hidden; white-space: nowrap; text-overflow: ellipsis;"> ${tdData["Screenshot/Comments"]}</p>
+        //             //                 </div>
+        //             //             `;
+
+                                
+                            
+        //             //     });
+        //             // })
+        //         }
+                
+        //         console.log(NICases);
+
+        //     }
+        //     // return data.records;    
+        // })
+        // .catch(function(error) {
+        //     tableTitle = document.querySelector('#tableTitle');
 
             
-                if (error == "SyntaxError: Unexpected end of JSON input"){
+        //         if (error == "SyntaxError: Unexpected end of JSON input"){
                 
-                    let tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td>No consulted case</td>
-                            <td>No consulted case</td>
-                            <td>No consulted case</td>
-                            <td>No consulted case</td>
-                        `;
-                    if(tableTitle.dataset.id == 'consulted'){
-                        NICasesTbody.innerHTML = "";
-                        NICasesTbody.appendChild(tr);
-                    }
+        //             let tr = document.createElement('tr');
+        //                 tr.innerHTML = `
+        //                     <td>No consulted case</td>
+        //                     <td>No consulted case</td>
+        //                     <td>No consulted case</td>
+        //                     <td>No consulted case</td>
+        //                 `;
+        //             if(tableTitle.dataset.id == 'consulted'){
+        //                 NICasesTbody.innerHTML = "";
+        //                 NICasesTbody.appendChild(tr);
+        //             }
                     
-                    document.querySelector('#ni-table-loader').classList.toggle('hide');
-                    console.log(error);
-                } else {
-                    swal("Failed!", "There seems to be a problem in retrieving NI cases.", "error");
-                    document.querySelector('#ni-table-loader').classList.toggle('hide');
-                    console.log(error);
-                }
+        //             document.querySelector('#ni-table-loader').classList.toggle('hide');
+        //             console.log(error);
+        //         } else {
+        //             swal("Failed!", "There seems to be a problem in retrieving NI cases.", "error");
+        //             document.querySelector('#ni-table-loader').classList.toggle('hide');
+        //             console.log(error);
+        //         }
             
             
             
-        }); 
+        // }); 
     }
 
 
